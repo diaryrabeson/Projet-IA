@@ -1,8 +1,9 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 from module.text_to_speech import text_to_speech
 from module.speech_to_text import audio_to_text
 from werkzeug.utils import secure_filename
 import os
+import wikipedia
 
 app = Flask(__name__)
 
@@ -10,6 +11,7 @@ UPLOAD_FOLDER = 'uploads'
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
 # dossier pour stocker temporairement les fichiers audio
 AUDIO_FOLDER = os.path.join("static", "audio")
 os.makedirs(AUDIO_FOLDER, exist_ok=True)
@@ -49,6 +51,28 @@ def speech_to_text_page():
             # Supprimer le fichier après traitement
             os.remove(path)
     return render_template('speech_to_text.html', recognized_text=recognized_text)
+
+# ------------------- Recherche en temps réel depuis la voix -------------------
+@app.route('/search-from-voice', methods=['POST'])
+def search_from_voice():
+    data = request.get_json()
+    query = data.get('query', '').strip()
+
+    if not query:
+        return jsonify({'results': 'Aucun mot détecté.'})
+
+    try:
+        # Récupère le résumé du mot (1-2 phrases)
+        summary = wikipedia.summary(query, sentences=2, auto_suggest=True, redirect=True)
+        result_html = f"<b>{query} :</b> {summary}"
+    except wikipedia.exceptions.DisambiguationError as e:
+        result_html = f"{query} : Plusieurs résultats possibles. Exemple : {', '.join(e.options[:5])}"
+    except wikipedia.exceptions.PageError:
+        result_html = f"Aucune définition trouvée pour '{query}'"
+    except Exception as e:
+        result_html = f"Erreur : {str(e)}"
+
+    return jsonify({'results': result_html})
 
 # ------------------- Autres pages -------------------
 @app.route('/chatbot')

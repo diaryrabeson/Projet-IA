@@ -7,5 +7,7 @@ torch
 pillow
 opencv-python
 googletrans==4.0.0-rc1
-SpeechRecognition
+pydub
 openai
+ffmpeg
+# wikipedia
