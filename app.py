@@ -1,13 +1,23 @@
 from flask import Flask, render_template, request
-from module.text_to_speech import text_to_speech  # module que tu as créé
+from module.text_to_speech import text_to_speech
+from module.speech_to_text import audio_to_text
+from werkzeug.utils import secure_filename
+import os
 
 app = Flask(__name__)
+
+UPLOAD_FOLDER = 'uploads'
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+# dossier pour stocker temporairement les fichiers audio
+AUDIO_FOLDER = os.path.join("static", "audio")
+os.makedirs(AUDIO_FOLDER, exist_ok=True)
 
 # ------------------- Page d'accueil -------------------
 @app.route('/')
 def index():
     return render_template('index.html')
-
 
 # ------------------- Text → Speech -------------------
 @app.route('/text-to-speech', methods=['GET', 'POST'])
@@ -16,14 +26,31 @@ def text_to_speech_page():
     if request.method == 'POST':
         text = request.form.get('text')
         if text and text.strip():
-            audio_file = text_to_speech(text)  # le nom sera unique
+            audio_file = text_to_speech(text)
     return render_template('text_to_speech.html', audio_file=audio_file)
 
-# ------------------- Autres pages (placeholders) -------------------
-@app.route('/speech-to-text')
-def speech_to_text():
-    return render_template('speech_to_text.html')
+# ------------------- Speech → Text -------------------
+@app.route('/speech-to-text', methods=['GET', 'POST'])
+def speech_to_text_page():
+    recognized_text = None
+    if request.method == 'POST':
+        # Récupérer le fichier audio depuis le formulaire
+        file = request.files.get('recorded_audio') or request.files.get('audio_file')
+        if file and file.filename != '':
+            filename = secure_filename(file.filename)
+            path = os.path.join(AUDIO_FOLDER, filename)
 
+            # Sauvegarder temporairement
+            file.save(path)
+
+            # Conversion audio → texte
+            recognized_text = audio_to_text(path)
+
+            # Supprimer le fichier après traitement
+            os.remove(path)
+    return render_template('speech_to_text.html', recognized_text=recognized_text)
+
+# ------------------- Autres pages -------------------
 @app.route('/chatbot')
 def chatbot():
     return render_template('chatbot.html')
