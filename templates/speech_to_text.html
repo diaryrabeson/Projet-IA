@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>🎙️ Audio to Text</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        body {
+            font-family: Arial;
+            text-align: center;
+            margin-top: 40px;
+        }
+        button {
+            margin: 10px;
+            padding: 10px 15px;
+            cursor: pointer;
+        }
+        #result, #liveText {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-top: 20px;
+            width: 60%;
+            margin-left: auto;
+            margin-right: auto;
+            min-height: 50px;
+        }
+    </style>
+</head>
+<body>
+    <h2>🎧 Convertir un fichier audio en texte</h2>
+
+    <form id="uploadForm" enctype="multipart/form-data">
+        <input type="file" name="audio" accept="audio/*" required>
+        <button type="submit">Convertir</button>
+    </form>
+
+    <h3>📝 Résultat :</h3>
+    <div id="result">Aucun texte pour le moment</div>
+
+    <hr style="margin:40px 0">
+
+    <h2>🎤 Micro en direct</h2>
+    <button id="startBtn">Démarrer</button>
+    <button id="stopBtn">Arrêter</button>
+
+    <h3>🗣️ Ce que vous dites :</h3>
+    <div id="liveText">Rien encore...</div>
+
+    <script>
+        // --- Upload du fichier ---
+        document.getElementById("uploadForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            document.getElementById("result").innerText = "Conversion en cours...";
+
+            const response = await axios.post("/convert", formData);
+            document.getElementById("result").innerText = response.data.text || "Erreur de conversion.";
+        });
+
+        // --- Reconnaissance vocale ---
+        let recognition;
+        if ('webkitSpeechRecognition' in window) {
+            recognition = new webkitSpeechRecognition();
+            recognition.continuous = true;
+            recognition.lang = 'fr-FR';
+
+            recognition.onresult = function(event) {
+                let transcript = '';
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    transcript += event.results[i][0].transcript;
+                }
+                document.getElementById("liveText").innerText = transcript;
+            };
+
+            document.getElementById("startBtn").addEventListener("click", () => {
+                recognition.start();
+                document.getElementById("liveText").innerText = "Écoute en cours...";
+            });
+
+            document.getElementById("stopBtn").addEventListener("click", () => {
+                recognition.stop();
+                document.getElementById("liveText").innerText += " [Arrêté]";
+            });
+        } else {
+            alert("La reconnaissance vocale n'est pas supportée sur ce navigateur 😢");
+        }
+    </script>
+</body>
+</html>
