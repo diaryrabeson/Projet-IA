@@ -2,103 +2,587 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>🎙️ Audio to Text</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transcription Audio - Interface Professionnelle</title>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body {
-            font-family: Arial;
-            text-align: center;
-            margin-top: 40px;
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3a56d4;
+            --secondary: #7209b7;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+            --gray-light: #e9ecef;
+            --success: #4bb543;
+            --danger: #dc3545;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
         }
-        button {
-            margin: 10px;
-            padding: 10px 15px;
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background-color: #f5f7fb;
+            padding: 0;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 30px 0;
+            text-align: center;
+            border-radius: 0 0 var(--border-radius) var(--border-radius);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 25px;
+            margin-bottom: 30px;
+            transition: var(--transition);
+        }
+
+        .card:hover {
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--gray-light);
+        }
+
+        .card-header i {
+            color: var(--primary);
+            font-size: 1.5rem;
+        }
+
+        .card-header h2 {
+            font-size: 1.5rem;
+            color: var(--dark);
+        }
+
+        .card-content {
+            margin-top: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
             cursor: pointer;
         }
-        #result, #liveText, #searchResults {
-            border: 1px solid #ccc;
-            padding: 10px;
-            margin-top: 20px;
-            width: 60%;
-            margin-left: auto;
-            margin-right: auto;
-            min-height: 50px;
+
+        .file-input-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 15px 20px;
+            background-color: var(--gray-light);
+            border: 2px dashed var(--gray);
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: center;
+        }
+
+        .file-input-label:hover {
+            background-color: #e2e6ea;
+            border-color: var(--primary);
+        }
+
+        .file-input-label i {
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary);
+        }
+
+        .btn-secondary:hover {
+            background-color: #6511a0;
+        }
+
+        .btn-success {
+            background-color: var(--success);
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+        }
+
+        .btn:disabled {
+            background-color: var(--gray);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .result-box {
+            background-color: var(--light);
+            border: 1px solid var(--gray-light);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            min-height: 120px;
+            margin-top: 15px;
+            overflow-y: auto;
+            max-height: 300px;
+        }
+
+        .result-box p {
+            margin: 0;
+        }
+
+        .placeholder-text {
+            color: var(--gray);
+            font-style: italic;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 15px;
+        }
+
+        .status-recording {
+            background-color: rgba(220, 53, 69, 0.1);
+            color: var(--danger);
+        }
+
+        .status-processing {
+            background-color: rgba(75, 181, 67, 0.1);
+            color: var(--success);
+        }
+
+        .status-idle {
+            background-color: rgba(108, 117, 125, 0.1);
+            color: var(--gray);
+        }
+
+        .divider {
+            height: 1px;
+            background: linear-gradient(to right, transparent, var(--gray-light), transparent);
+            margin: 40px 0;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+
+        .footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            background-color: white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
+            transform: translateX(150%);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            border-left: 4px solid var(--success);
+        }
+
+        .notification.error {
+            border-left: 4px solid var(--danger);
+        }
+
+        .notification.info {
+            border-left: 4px solid var(--primary);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            header h1 {
+                font-size: 2rem;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
         }
     </style>
 </head>
 <body>
-    <h2>🎧 Convertir un fichier audio en texte</h2>
+    <header>
+        <div class="container">
+            <h1><i class="fas fa-microphone-alt"></i> Transcription Audio Professionnelle</h1>
+            <p>Convertissez vos fichiers audio en texte avec précision et efficacité</p>
+        </div>
+    </header>
 
-    <form id="uploadForm" enctype="multipart/form-data">
-        <input type="file" name="audio" accept="audio/*" required>
-        <button type="submit">Convertir</button>
-    </form>
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-file-audio"></i>
+                <h2>Transcription de Fichier Audio</h2>
+            </div>
+            <div class="card-content">
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <div class="file-input-wrapper">
+                            <input type="file" name="audio" accept="audio/*" required id="fileInput">
+                            <label for="fileInput" class="file-input-label">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <span>Sélectionnez un fichier audio ou glissez-déposez ici</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="btn-group">
+                        <button type="submit" class="btn" id="convertBtn">
+                            <i class="fas fa-sync-alt"></i> Convertir en Texte
+                        </button>
+                    </div>
+                </form>
 
-    <h3>📝 Résultat :</h3>
-    <div id="result">Aucun texte pour le moment</div>
+                <div class="card-content">
+                    <h3>Résultat de la Transcription</h3>
+                    <div id="result" class="result-box">
+                        <p class="placeholder-text">Aucun fichier converti pour le moment</p>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-    <hr style="margin:40px 0">
+        <div class="divider"></div>
 
-    <h2>🎤 Micro en direct</h2>
-    <button id="startBtn">Démarrer</button>
-    <button id="stopBtn">Arrêter</button>
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-microphone"></i>
+                <h2>Reconnaissance Vocale en Direct</h2>
+            </div>
+            <div class="card-content">
+                <div class="status-indicator status-idle" id="statusIndicator">
+                    <i class="fas fa-circle"></i> En attente
+                </div>
+                
+                <div class="btn-group">
+                    <button id="startBtn" class="btn btn-success">
+                        <i class="fas fa-play"></i> Démarrer l'Enregistrement
+                    </button>
+                    <button id="stopBtn" class="btn btn-danger" disabled>
+                        <i class="fas fa-stop"></i> Arrêter l'Enregistrement
+                    </button>
+                </div>
 
-    <h3>🗣️ Ce que vous dites :</h3>
-    <div id="liveText">Rien encore...</div>
+                <div class="card-content">
+                    <h3>Transcription en Temps Réel</h3>
+                    <div id="liveText" class="result-box">
+                        <p class="placeholder-text">La transcription apparaîtra ici</p>
+                    </div>
+                </div>
 
-    <h3>🔍 Résultats de recherche :</h3>
-    <div id="searchResults">Les résultats apparaîtront ici...</div>
+                <div class="card-content">
+                    <h3>Résultats de Recherche</h3>
+                    <div id="searchResults" class="result-box">
+                        <p class="placeholder-text">Les résultats de recherche s'afficheront ici</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="container">
+            <p>Interface de transcription audio professionnelle &copy; 2023</p>
+            <p><a href="/"><i class="fas fa-arrow-left"></i> Retour à l'accueil</a></p>
+        </div>
+    </div>
+
+    <div id="notification" class="notification">
+        <i class="fas fa-info-circle"></i>
+        <span id="notificationText">Notification</span>
+    </div>
 
     <script>
         // --- Upload du fichier ---
         document.getElementById("uploadForm").addEventListener("submit", async (e) => {
             e.preventDefault();
-            const formData = new FormData(e.target);
-            document.getElementById("result").innerText = "Conversion en cours...";
-
-            const response = await axios.post("/convert", formData);
-            document.getElementById("result").innerText = response.data.text || "Erreur de conversion.";
+            const convertBtn = document.getElementById("convertBtn");
+            const originalText = convertBtn.innerHTML;
+            
+            convertBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Conversion en cours...';
+            convertBtn.disabled = true;
+            
+            document.getElementById("result").innerHTML = '<p class="placeholder-text">Conversion en cours...</p>';
+            
+            try {
+                const formData = new FormData(e.target);
+                const response = await axios.post("/convert", formData);
+                
+                document.getElementById("result").innerHTML = `<p>${response.data.text || "Erreur de conversion."}</p>`;
+                showNotification("Conversion terminée avec succès", "success");
+            } catch (error) {
+                console.error("Erreur de conversion:", error);
+                document.getElementById("result").innerHTML = '<p class="placeholder-text">Erreur lors de la conversion</p>';
+                showNotification("Erreur lors de la conversion", "error");
+            } finally {
+                convertBtn.innerHTML = originalText;
+                convertBtn.disabled = false;
+            }
         });
 
         // --- Reconnaissance vocale ---
         let recognition;
+        const startBtn = document.getElementById("startBtn");
+        const stopBtn = document.getElementById("stopBtn");
+        const statusIndicator = document.getElementById("statusIndicator");
+        
         if ('webkitSpeechRecognition' in window) {
             recognition = new webkitSpeechRecognition();
             recognition.continuous = true;
+            recognition.interimResults = true;
             recognition.lang = 'fr-FR';
 
-            recognition.onresult = function(event) {
-                let transcript = '';
-                for (let i = event.resultIndex; i < event.results.length; ++i) {
-                    transcript += event.results[i][0].transcript;
-                }
-                document.getElementById("liveText").innerText = transcript;
-
-                // --- Envoi du texte au serveur pour recherche ---
-                axios.post('/search-from-voice', { query: transcript })
-                    .then(res => {
-                        document.getElementById("searchResults").innerHTML = res.data.results;
-                    })
-                    .catch(err => {
-                        console.error("Erreur recherche :", err);
-                    });
+            recognition.onstart = function() {
+                statusIndicator.className = "status-indicator status-recording";
+                statusIndicator.innerHTML = '<i class="fas fa-circle"></i> Enregistrement en cours';
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+                document.getElementById("liveText").innerHTML = '<p class="placeholder-text">Écoute en cours...</p>';
             };
 
-            document.getElementById("startBtn").addEventListener("click", () => {
+            recognition.onend = function() {
+                statusIndicator.className = "status-indicator status-idle";
+                statusIndicator.innerHTML = '<i class="fas fa-circle"></i> En attente';
+                startBtn.disabled = false;
+                stopBtn.disabled = true;
+            };
+
+            recognition.onresult = function(event) {
+                let finalTranscript = '';
+                let interimTranscript = '';
+
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript;
+                    } else {
+                        interimTranscript += event.results[i][0].transcript;
+                    }
+                }
+
+                let displayText = finalTranscript;
+                if (interimTranscript) {
+                    displayText += `<span style="color: var(--gray);">${interimTranscript}</span>`;
+                }
+
+                document.getElementById("liveText").innerHTML = `<p>${displayText || 'Rien détecté pour le moment'}</p>`;
+
+                // Envoi du texte final au serveur pour recherche
+                if (finalTranscript) {
+                    axios.post('/search-from-voice', { query: finalTranscript })
+                        .then(res => {
+                            document.getElementById("searchResults").innerHTML = res.data.results || 
+                                '<p class="placeholder-text">Aucun résultat trouvé</p>';
+                        })
+                        .catch(err => {
+                            console.error("Erreur recherche :", err);
+                            document.getElementById("searchResults").innerHTML = 
+                                '<p class="placeholder-text">Erreur lors de la recherche</p>';
+                        });
+                }
+            };
+
+            recognition.onerror = function(event) {
+                console.error("Erreur de reconnaissance:", event.error);
+                showNotification("Erreur de reconnaissance vocale: " + event.error, "error");
+            };
+
+            startBtn.addEventListener("click", () => {
                 recognition.start();
-                document.getElementById("liveText").innerText = "Écoute en cours...";
             });
 
-            document.getElementById("stopBtn").addEventListener("click", () => {
+            stopBtn.addEventListener("click", () => {
                 recognition.stop();
-                document.getElementById("liveText").innerText += " [Arrêté]";
             });
         } else {
             alert("La reconnaissance vocale n'est pas supportée sur ce navigateur 😢");
+            startBtn.disabled = true;
+            stopBtn.disabled = true;
+        }
+
+        // Fonction de notification
+        function showNotification(message, type = "info") {
+            const notification = document.getElementById("notification");
+            const notificationText = document.getElementById("notificationText");
+            
+            notification.className = `notification ${type}`;
+            notificationText.textContent = message;
+            
+            notification.classList.add("show");
+            
+            setTimeout(() => {
+                notification.classList.remove("show");
+            }, 4000);
+        }
+
+        // Gestion du drag & drop pour les fichiers
+        const fileInput = document.getElementById("fileInput");
+        const fileInputLabel = document.querySelector(".file-input-label");
+        
+        fileInput.addEventListener("change", function() {
+            if (this.files && this.files[0]) {
+                fileInputLabel.innerHTML = `<i class="fas fa-file-audio"></i> ${this.files[0].name}`;
+            }
+        });
+
+        // Empêcher le comportement par défaut du drag & drop
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            fileInputLabel.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        // Gestion des événements de drag & drop
+        ['dragenter', 'dragover'].forEach(eventName => {
+            fileInputLabel.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            fileInputLabel.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight() {
+            fileInputLabel.style.borderColor = 'var(--primary)';
+            fileInputLabel.style.backgroundColor = 'rgba(67, 97, 238, 0.05)';
+        }
+
+        function unhighlight() {
+            fileInputLabel.style.borderColor = 'var(--gray)';
+            fileInputLabel.style.backgroundColor = 'var(--gray-light)';
+        }
+
+        // Gestion du drop de fichier
+        fileInputLabel.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            fileInput.files = files;
+            
+            if (files && files[0]) {
+                fileInputLabel.innerHTML = `<i class="fas fa-file-audio"></i> ${files[0].name}`;
+            }
         }
     </script>
-
-     <br><br>
-  <a href="/">⬅ Retour à l'accueil</a>
 </body>
 </html>
