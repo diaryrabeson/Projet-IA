@@ -10,7 +10,7 @@ import wikipedia
 
 
 app = Flask(__name__)
-
+ALLOWED_EXTENSIONS = {'txt'}
 # --- Configuration dossiers
 UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -21,7 +21,10 @@ os.makedirs(AUDIO_FOLDER, exist_ok=True)
 
 # --- Wikipedia en français
 wikipedia.set_lang("fr")
+LLOWED_EXTENSIONS = {'txt'}
 
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 # ------------------- Pages -------------------
 @app.route('/')
 def index():
@@ -30,11 +33,57 @@ def index():
 @app.route('/text-to-speech', methods=['GET', 'POST'])
 def text_to_speech_page():
     audio_file = None
-    if request.method == 'POST':
-        text = request.form.get('text', '')
-        if text.strip():
-            audio_file = text_to_speech(text)
-    return render_template('text_to_speech.html', audio_file=audio_file)
+    error = None
+
+    if request.method == "POST":
+        # 1) récupère le texte du textarea
+        text = request.form.get("text", "").strip()
+
+        # 2) récupère le fichier uploadé (si présent)
+        file = request.files.get("file")
+
+        if file and file.filename != '':
+            # vérifier l'extension
+            if not allowed_file(file.filename):
+                error = "Type de fichier non supporté. Seuls les .txt sont acceptés."
+                return render_template("text_to_speech.html", audio_file=None, error=error)
+
+            filename = secure_filename(file.filename)
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+
+            # sauvegarder temporairement
+            file.save(filepath)
+
+            # lire le contenu (détection d'encodage simplifiée, tolérer erreurs)
+            try:
+                with open(filepath, "r", encoding="utf-8") as f:
+                    text_from_file = f.read().strip()
+            except UnicodeDecodeError:
+                # fallback si encodage différent
+                with open(filepath, "r", encoding="latin-1", errors="ignore") as f:
+                    text_from_file = f.read().strip()
+            except Exception as e:
+                text_from_file = ""
+                error = f"Impossible de lire le fichier: {e}"
+
+            # supprimer le fichier uploadé (on a lu son contenu)
+            try:
+                os.remove(filepath)
+            except Exception:
+                pass
+
+            # si le fichier contient du texte, priorise le fichier sur le textarea
+            if text_from_file:
+                text = text_from_file
+
+        # 3) si on a du texte, génère l'audio
+        if text:
+            try:
+                audio_file = text_to_speech(text)
+            except Exception as e:
+                error = f"Erreur lors de la génération audio : {e}"
+
+    return render_template("text_to_speech.html", audio_file=audio_file, error=error)
 
 @app.route('/speech-to-text', methods=['GET', 'POST'])
 def speech_to_text_page():
@@ -148,3 +197,6 @@ def speech_to_text_route():
     return jsonify({'recognized_text': recognized_text})
 
 
+@app.route('/image-comparaison')
+def image_comparaisoon():
+    return render_template('image_comparaison.html')
