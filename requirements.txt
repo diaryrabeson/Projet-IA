@@ -10,4 +10,9 @@ googletrans==4.0.0-rc1
 pydub
 openai
 ffmpeg
-# wikipedia
+sentence-transformers faiss-cpu flask
+wikipedia
+# pip install flask sentence-transformers faiss-cpu torch transformers
+# googletrans==4.0.0-rc1
+# pip install deep-translator
+# pip install SpeechRecognition pyaudio gTTS playsound deep-translator
