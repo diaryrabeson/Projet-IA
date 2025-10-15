@@ -15,7 +15,7 @@
             padding: 10px 15px;
             cursor: pointer;
         }
-        #result, #liveText {
+        #result, #liveText, #searchResults {
             border: 1px solid #ccc;
             padding: 10px;
             margin-top: 20px;
@@ -46,6 +46,9 @@
     <h3>🗣️ Ce que vous dites :</h3>
     <div id="liveText">Rien encore...</div>
 
+    <h3>🔍 Résultats de recherche :</h3>
+    <div id="searchResults">Les résultats apparaîtront ici...</div>
+
     <script>
         // --- Upload du fichier ---
         document.getElementById("uploadForm").addEventListener("submit", async (e) => {
@@ -70,6 +73,15 @@
                     transcript += event.results[i][0].transcript;
                 }
                 document.getElementById("liveText").innerText = transcript;
+
+                // --- Envoi du texte au serveur pour recherche ---
+                axios.post('/search-from-voice', { query: transcript })
+                    .then(res => {
+                        document.getElementById("searchResults").innerHTML = res.data.results;
+                    })
+                    .catch(err => {
+                        console.error("Erreur recherche :", err);
+                    });
             };
 
             document.getElementById("startBtn").addEventListener("click", () => {
@@ -85,5 +97,8 @@
             alert("La reconnaissance vocale n'est pas supportée sur ce navigateur 😢");
         }
     </script>
+
+     <br><br>
+  <a href="/">⬅ Retour à l'accueil</a>
 </body>
 </html>
