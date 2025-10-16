@@ -18,3 +18,5 @@ wikipedia
 # pip install SpeechRecognition pyaudio gTTS playsound deep-translator
 # tensorflow
 # pip install tf-keras
+# pip install opencv-python scikit-image numpy
+

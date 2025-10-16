@@ -7,12 +7,15 @@ from werkzeug.utils import secure_filename
 from module.image_recognition import recognize_image
 import os
 import wikipedia
+from module.image_comparaison import compare_images, get_image_details
+import cv2
 
 
 app = Flask(__name__)
 ALLOWED_EXTENSIONS = {'txt'}
 # --- Configuration dossiers
 UPLOAD_FOLDER = 'uploads'
+UPLOAD_FOLDER = "static/uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
@@ -197,6 +200,41 @@ def speech_to_text_route():
     return jsonify({'recognized_text': recognized_text})
 
 
-@app.route('/image-comparaison')
-def image_comparaisoon():
+# @app.route('/image-comparaison')
+# def image_comparaisoon():
+#     return render_template('image_comparaison.html')
+
+@app.route('/image-comparaison', methods=['GET', 'POST'])
+def image_comparaison():
+    if request.method == 'POST':
+        img1 = request.files['image1']
+        img2 = request.files['image2']
+
+        if not img1 or not img2:
+            return render_template('image_comparaison.html', error="Veuillez sélectionner deux images.")
+
+        path1 = os.path.join(UPLOAD_FOLDER, img1.filename)
+        path2 = os.path.join(UPLOAD_FOLDER, img2.filename)
+        img1.save(path1)
+        img2.save(path2)
+
+        # Obtenir les détails
+        details1 = get_image_details(path1)
+        details2 = get_image_details(path2)
+
+        # Comparer
+        score, diff = compare_images(path1, path2)
+        result_path = os.path.join(UPLOAD_FOLDER, "diff_result.jpg")
+        cv2.imwrite(result_path, diff)
+
+        return render_template(
+            'image_comparaison.html',
+            image1=path1,
+            image2=path2,
+            result=result_path,
+            score=round(score * 100, 2),
+            details1=details1,
+            details2=details2
+        )
+
     return render_template('image_comparaison.html')
